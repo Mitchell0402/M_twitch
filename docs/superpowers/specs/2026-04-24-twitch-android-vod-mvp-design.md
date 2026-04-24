@@ -4,18 +4,29 @@ Date: 2026-04-24
 
 ## Summary
 
-Build a personal-use Android Twitch client with a VOD-first MVP. The first
-release focuses on discovering Twitch VODs, playing them smoothly, scrubbing
-within playback, handling fullscreen/orientation, and remembering watch
-progress. Live chat, VOD chat replay, and third-party emotes are intentionally
-post-MVP.
+Build a personal-use Android Twitch client. The long-term goal is a complete
+native Android client for watching live streams, VODs, chat, chat replay, and
+third-party emotes. The first prototype is a VOD-first MVP focused on
+discovering Twitch VODs, playing them smoothly, scrubbing within playback,
+handling fullscreen/orientation, and remembering watch progress. Live chat, VOD
+chat replay, and third-party emotes are intentionally deferred out of the first
+prototype, not removed from the product vision.
 
 The app should be native Android, implemented with Kotlin, Jetpack Compose, and
 Media3. Google Stitch is the primary frontend design exploration tool. Claude
 Design is reserved for translating selected Stitch designs into implementation
 handoff material so its limited quota is spent only at high-leverage checkpoints.
 
-## Goals
+## Long-Term Product Direction
+
+The project should grow into a complete Android Twitch client for personal use.
+The VOD-first MVP is the first usable prototype because VOD playback and
+scrubbing are the clearest missing capabilities in the third-party clients the
+user has tried. Later phases should expand the same native app into live
+playback, live chat, VOD chat replay, BTTV/FFZ/7TV emotes, and richer player
+tools.
+
+## MVP-A Goals
 
 - Let the user search for or open a Twitch channel.
 - Show a usable VOD list for the selected channel.
@@ -38,9 +49,9 @@ handoff material so its limited quota is spent only at high-leverage checkpoints
 
 ## Product Shape
 
-The MVP should feel like a focused VOD player rather than a full social client.
-The first screen should put the user directly into finding or resuming content,
-not a marketing-style landing page.
+The prototype MVP should feel like a focused VOD player rather than the final
+complete Twitch client. The first screen should put the user directly into
+finding or resuming content, not a marketing-style landing page.
 
 Core screens:
 
@@ -229,7 +240,10 @@ Engineering verification:
 - Run device QA and performance pass.
 - Produce a personal beta APK.
 
-### Post-MVP
+### Later Client Capabilities
+
+These are later phases of the same complete client roadmap after the VOD-first
+prototype is stable.
 
 - Live playback.
 - Live chat.

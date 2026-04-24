@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Create the design-handoff workflow and a native Android Compose foundation for the VOD-first Twitch client.
+**Goal:** Create the design-handoff workflow and a native Android Compose foundation for the first VOD-focused prototype of a complete Twitch client.
 
 **Architecture:** This first plan covers M0-M1 only. It keeps production code in a single Android `:app` module with strict package boundaries for design system, features, data contracts, and local state; split Gradle modules can be introduced after the VOD discovery and playback flows prove their shape. UI starts with real Compose screens and fake state so the app can launch before Twitch API work begins.
 
@@ -12,13 +12,13 @@
 
 ## Scope Boundary
 
-This plan implements only:
+This plan implements only the first prototype foundation:
 
 - M0 design workflow artifacts.
 - M1 Android foundation.
 - App shell, theme, navigation, screen scaffolds, local watch-history contract, account-state model, and playback-source contract.
 
-This plan does not implement Twitch OAuth, Twitch API calls, real VOD list loading, real HLS URL resolution, Media3 playback wiring, chat, emotes, downloads, or release signing. Those each get their own plan after this foundation compiles and launches.
+This plan does not implement Twitch OAuth, Twitch API calls, real VOD list loading, real HLS URL resolution, Media3 playback wiring, chat, emotes, downloads, or release signing. Those are not cut from the product; they each get their own plan after this foundation compiles and launches.
 
 ## References Checked
 
@@ -81,7 +81,7 @@ Create `docs/design/stitch-mvp-a-prompt.md` with this content:
 ```markdown
 # Google Stitch Prompt: M Twitch VOD-first Android Client
 
-Design a native Android Twitch VOD client for personal use. The first version is VOD-first, not a full social Twitch replacement.
+Design the first prototype for a native Android Twitch client for personal use. The long-term app should become a complete client, but this first version is VOD-first.
 
 Primary user goal:
 - Find a Twitch channel.
@@ -95,7 +95,7 @@ Design constraints:
 - Performance-sensitive video player screen.
 - Avoid heavy decorative animation around video playback.
 - The first screen should be useful immediately, not a marketing page.
-- Chat, VOD chat replay, BTTV, FFZ, and 7TV emotes are post-MVP.
+- Chat, VOD chat replay, BTTV, FFZ, and 7TV emotes are later phases of the same app, not separate products.
 
 Create 2-3 visual directions and include these screens:
 - Home / Resume
@@ -130,7 +130,7 @@ Create `docs/design/claude-design-translation-prompt.md` with this content:
 
 You are translating the selected Google Stitch design direction for a native Android app named M Twitch.
 
-The app is a VOD-first Twitch client for personal use. The MVP includes:
+The app is a Twitch client for personal use. The first prototype is VOD-first and includes:
 - Home / Resume
 - Channel VOD List
 - VOD Player
@@ -190,7 +190,7 @@ Create `DESIGN.md` with this content:
 
 ## Product Direction
 
-M Twitch is a focused Android Twitch VOD client. The interface should feel calm, fast, and playback-centered. It should prioritize resuming content, scanning VOD lists, and controlling playback without visual noise.
+M Twitch is a complete Android Twitch client being built through a VOD-first prototype. The prototype interface should feel calm, fast, and playback-centered. It should prioritize resuming content, scanning VOD lists, and controlling playback without visual noise while leaving room for later live chat, chat replay, and emote surfaces.
 
 ## Visual Style
 
@@ -1653,3 +1653,6 @@ Expected: commit succeeds only if files changed.
 - M2 VOD Discovery: Twitch OAuth, channel lookup, Get Videos API, VOD list states.
 - M3 VOD Playback: playback token/source resolution, Media3 player, scrubber, lifecycle, fullscreen.
 - M4 Personal Usability: persisted DataStore or Room history, recent VODs, diagnostics, device performance pass.
+- M5 Live Playback: live channel playback, stream metadata, and low-latency player options.
+- M6 Live Chat And Emotes: Twitch chat plus BTTV, FFZ, and 7TV emote rendering.
+- M7 VOD Chat Replay: replay fetching, time sync, seek behavior, and emote-aware rendering.
