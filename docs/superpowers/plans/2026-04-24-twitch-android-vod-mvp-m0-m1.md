@@ -1,24 +1,24 @@
-# Twitch Android VOD MVP M0-M1 Foundation Implementation Plan
+# Twitch Android Client M0-M1 Foundation Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Create the design-handoff workflow and a native Android Compose foundation for the first VOD-focused prototype of a complete Twitch client.
+**Goal:** Create the design-handoff workflow and a native Android Compose foundation for a complete third-party Twitch client, with VOD as the first usable path and live/chat/plugin seams present from day one.
 
-**Architecture:** This first plan covers M0-M1 only. It keeps production code in a single Android `:app` module with strict package boundaries for design system, features, data contracts, and local state; split Gradle modules can be introduced after the VOD discovery and playback flows prove their shape. UI starts with real Compose screens and fake state so the app can launch before Twitch API work begins.
+**Architecture:** This first plan covers M0-M1 only. It keeps production code in a single Android `:app` module with strict package boundaries for design system, features, playback, chat, plugin contracts, data contracts, and local state; split Gradle modules can be introduced after VOD, live, and chat boundaries prove their shape. UI starts with real Compose screens, fake VOD/chat state, a default local chat plugin, and placeholder live/chat surfaces so the app can launch before Twitch API, EventSub, IRC, and playback-resolution work begins.
 
-**Tech Stack:** Kotlin 2.3.21, Android Gradle Plugin 9.2.0, Gradle Wrapper 9.4.1, Android SDK 36, Jetpack Compose BOM 2026.04.01, Media3 1.10.0, Navigation Compose 2.9.8, Lifecycle Compose 2.10.0, DataStore 1.2.1, Kotlin coroutines 1.10.2, JUnit 4.13.2.
+**Tech Stack:** Kotlin, Android Gradle Plugin, Gradle Wrapper, Android SDK, Jetpack Compose BOM, Media3, Navigation Compose, Lifecycle Compose, DataStore, Kotlin coroutines, and JUnit. Task 2 begins with an explicit version verification step; use the latest stable compatible set verified from official sources, with the current preferred baseline being Kotlin 2.3.20, AGP 9.1.0, Gradle Wrapper 9.3.1, Android SDK 36, Compose BOM 2026.04.01, Media3 1.10.0, Navigation Compose 2.9.x stable, Lifecycle Compose 2.10.0, DataStore 1.2.1, coroutines 1.10.x stable, and JUnit 4.13.2. Chat, emote, and plugin foundation tasks use app-owned Kotlin contracts only; production network transports are planned after M1.
 
 ---
 
 ## Scope Boundary
 
-This plan implements only the first prototype foundation:
+This plan implements only the first client foundation:
 
 - M0 design workflow artifacts.
 - M1 Android foundation.
-- App shell, theme, navigation, screen scaffolds, local watch-history contract, account-state model, and playback-source contract.
+- App shell, theme, navigation, screen scaffolds, local watch-history contract, account-state model, playback-source contract, chat-event contract, emote-provider contract, chat-plugin contract, and default built-in local chat plugin.
 
-This plan does not implement Twitch OAuth, Twitch API calls, real VOD list loading, real HLS URL resolution, Media3 playback wiring, chat, emotes, downloads, or release signing. Those are not cut from the product; they each get their own plan after this foundation compiles and launches.
+This plan does not implement Twitch OAuth, Twitch API calls, real VOD list loading, real HLS URL resolution, real live playback, real chat transport, real emote-provider network calls, VOD chat replay fetching, downloads, external plugin loading, or release signing. Those are not cut from the product; they each get their own plan after this foundation compiles and launches.
 
 ## References Checked
 
@@ -26,18 +26,37 @@ This plan does not implement Twitch OAuth, Twitch API calls, real VOD list loadi
 - Compose BOM metadata: https://dl.google.com/dl/android/maven2/androidx/compose/compose-bom/maven-metadata.xml
 - Media3 metadata: https://dl.google.com/dl/android/maven2/androidx/media3/media3-exoplayer/maven-metadata.xml
 - Twitch Get Videos API: https://dev.twitch.tv/docs/api/reference#get-videos
+- Twitch Videos guide: https://dev.twitch.tv/docs/api/videos
+- Twitch Chat & Chatbots guide: https://dev.twitch.tv/docs/chat
+- Twitch EventSub guide: https://dev.twitch.tv/docs/eventsub
+- Twitch EventSub reference for channel chat message events: https://dev.twitch.tv/docs/eventsub/eventsub-reference/
+- Twitch Authentication guide: https://dev.twitch.tv/docs/authentication
 
 ## Dependency Approval Note
 
-Executing this plan adds the Android production dependencies listed in `gradle/libs.versions.toml`: Compose, Navigation Compose, Lifecycle Compose, Media3, DataStore, and coroutines. Because the repository instructions require confirmation before adding production dependencies, pause before Task 2 if the user has not approved this dependency set.
+Executing this plan adds the Android production dependencies listed in `gradle/libs.versions.toml`: Compose, Navigation Compose, Lifecycle Compose, Media3, DataStore, Kotlin serialization for type-safe Navigation routes, and coroutines. Because the repository instructions require confirmation before adding production dependencies, pause before Task 2 if the user has not approved this dependency set. This M0-M1 revision does not add a chat networking, WebSocket, IRC, image-loading, database, or plugin-runtime dependency; those require separate approval when their implementation plans are written.
+
+## Version Verification Note
+
+The version catalog in this plan must not be treated as guessed truth. Before writing `gradle/libs.versions.toml`, verify the local toolchain and official release metadata:
+
+- `gradle --version`, if Gradle is installed locally.
+- Gradle current release endpoint: https://services.gradle.org/versions/current.
+- AGP release notes: https://developer.android.com/build/releases/gradle-plugin.
+- Kotlin release notes: https://kotlinlang.org/docs/releases.html.
+- Compose BOM release notes or metadata.
+- Media3, Navigation, Lifecycle, and DataStore AndroidX release notes.
+- Kotlinx serialization release metadata for type-safe Navigation route support.
+
+If AGP 9.2.x is still preview-only when Task 2 runs, use the latest stable AGP 9.1.x-compatible stack instead. As of this review, AGP 9.1.0 + Gradle 9.3.1 is the safer stable baseline, while Gradle 9.4.1 is current but should not be paired with AGP unless the AGP compatibility table says so.
 
 ## File Structure
 
 Create or modify these files:
 
 - `DESIGN.md`: human-readable product and UI rules produced from Stitch and Claude Design handoff.
-- `docs/design/stitch-mvp-a-prompt.md`: prompt for Google Stitch exploration.
-- `docs/design/claude-design-translation-prompt.md`: prompt for Claude Design translation.
+- `docs/design/stitch-client-foundation-prompt.md`: prompt for Google Stitch exploration.
+- `docs/design/claude-design-client-translation-prompt.md`: prompt for Claude Design translation.
 - `docs/design/artifact-checklist.md`: required design outputs before engineering signoff.
 - `.gitignore`: Android and Gradle ignored files.
 - `settings.gradle.kts`: Gradle project and repositories.
@@ -54,40 +73,48 @@ Create or modify these files:
 - `app/src/main/java/dev/mitchell/mtwitch/core/local/InMemoryWatchHistoryRepository.kt`: testable in-memory implementation for foundation.
 - `app/src/main/java/dev/mitchell/mtwitch/data/playback/PlaybackSourceModels.kt`: playback-source contract models.
 - `app/src/main/java/dev/mitchell/mtwitch/data/playback/FakePlaybackSourceResolver.kt`: fake resolver for UI wiring.
+- `app/src/main/java/dev/mitchell/mtwitch/data/chat/ChatModels.kt`: normalized chat events, messages, connection state, and emote references.
+- `app/src/main/java/dev/mitchell/mtwitch/plugin/chat/ChatPlugin.kt`: typed local chat plugin API and registry.
+- `app/src/main/java/dev/mitchell/mtwitch/plugin/chat/DefaultChatPlugin.kt`: default built-in local chat plugin.
 - `app/src/main/java/dev/mitchell/mtwitch/navigation/AppRoute.kt`: route definitions.
 - `app/src/main/java/dev/mitchell/mtwitch/ui/theme/MtwitchTheme.kt`: Compose theme.
 - `app/src/main/java/dev/mitchell/mtwitch/feature/home/HomeScreen.kt`: Home / Resume scaffold.
 - `app/src/main/java/dev/mitchell/mtwitch/feature/channel/ChannelVodListScreen.kt`: Channel VOD list scaffold.
 - `app/src/main/java/dev/mitchell/mtwitch/feature/player/PlayerScreen.kt`: VOD player scaffold.
+- `app/src/main/java/dev/mitchell/mtwitch/feature/live/LivePlayerScreen.kt`: live player placeholder scaffold.
+- `app/src/main/java/dev/mitchell/mtwitch/feature/plugins/ChatPluginSettingsScreen.kt`: chat plugin settings scaffold.
 - `app/src/main/java/dev/mitchell/mtwitch/feature/settings/SettingsScreen.kt`: Settings scaffold.
 - `app/src/test/java/dev/mitchell/mtwitch/core/model/VodModelsTest.kt`: model tests.
 - `app/src/test/java/dev/mitchell/mtwitch/core/local/InMemoryWatchHistoryRepositoryTest.kt`: repository tests.
 - `app/src/test/java/dev/mitchell/mtwitch/data/playback/FakePlaybackSourceResolverTest.kt`: playback contract tests.
+- `app/src/test/java/dev/mitchell/mtwitch/plugin/chat/ChatPluginRegistryTest.kt`: chat plugin contract tests.
 - `app/src/test/java/dev/mitchell/mtwitch/navigation/AppRouteTest.kt`: navigation route tests.
 
 ## Task 1: Design Platform Handoff Prompts
 
 **Files:**
 
-- Create: `docs/design/stitch-mvp-a-prompt.md`
-- Create: `docs/design/claude-design-translation-prompt.md`
+- Create: `docs/design/stitch-client-foundation-prompt.md`
+- Create: `docs/design/claude-design-client-translation-prompt.md`
 - Create: `docs/design/artifact-checklist.md`
 - Create: `DESIGN.md`
 
 - [ ] **Step 1: Create the Google Stitch prompt**
 
-Create `docs/design/stitch-mvp-a-prompt.md` with this content:
+Create `docs/design/stitch-client-foundation-prompt.md` with this content:
 
 ```markdown
-# Google Stitch Prompt: M Twitch VOD-first Android Client
+# Google Stitch Prompt: M Twitch Full Client Foundation
 
-Design the first prototype for a native Android Twitch client for personal use. The long-term app should become a complete client, but this first version is VOD-first.
+Design the first prototype for a native Android Twitch client for personal use. The long-term app is a complete third-party client with live playback, VOD playback, live chat, VOD chat replay, third-party emotes, and local chat plugins. The first version should be VOD-first for the main usable path, but the shell must visibly account for live, chat, replay, plugin settings, and diagnostics.
 
 Primary user goal:
 - Find a Twitch channel.
 - Browse recent archived broadcasts.
 - Open a VOD.
 - Watch, pause, scrub, fullscreen, and resume later.
+- See where live playback and chat will live in the same app.
+- Configure the default local chat plugin even while real chat transport is not implemented.
 
 Design constraints:
 - Android phone first.
@@ -95,13 +122,17 @@ Design constraints:
 - Performance-sensitive video player screen.
 - Avoid heavy decorative animation around video playback.
 - The first screen should be useful immediately, not a marketing page.
-- Chat, VOD chat replay, BTTV, FFZ, and 7TV emotes are later phases of the same app, not separate products.
+- Chat, VOD chat replay, BTTV, FFZ, 7TV emotes, and chat plugins are later full implementations of the same app, not separate products.
+- The default chat plugin is built in locally and enabled by default.
 
 Create 2-3 visual directions and include these screens:
 - Home / Resume
 - Channel VOD List
 - VOD Player portrait
 - VOD Player landscape/fullscreen
+- Live Player placeholder
+- Chat panel / replay panel placeholder
+- Chat Plugin Settings
 - Settings
 
 For each screen include:
@@ -109,11 +140,15 @@ For each screen include:
 - Empty state
 - Recoverable error state
 - Offline or auth-needed state where relevant
+- Rate-limited or reconnecting state where chat is present
 
 Pay special attention to:
 - Player overlay layout
 - Scrubber ergonomics
 - Recent VOD progress indicators
+- Chat panel density and readability
+- Emote-heavy message rows without overwhelming playback
+- Plugin settings and diagnostics
 - One-handed phone use
 - Smooth but restrained transitions
 - A design-system summary with colors, type scale, spacing, controls, and motion rules
@@ -123,25 +158,38 @@ Output a DESIGN.md-style summary after the visual exploration.
 
 - [ ] **Step 2: Create the Claude Design translation prompt**
 
-Create `docs/design/claude-design-translation-prompt.md` with this content:
+Create `docs/design/claude-design-client-translation-prompt.md` with this content:
 
 ```markdown
-# Claude Design Prompt: Translate Stitch Direction To Compose Handoff
+# Claude Design Prompt: Translate Stitch Client Direction To Compose Handoff
 
 You are translating the selected Google Stitch design direction for a native Android app named M Twitch.
 
-The app is a Twitch client for personal use. The first prototype is VOD-first and includes:
+The app is a complete third-party Twitch client for personal use. The first implementation is a full-client foundation with a VOD-first usable path. It includes:
 - Home / Resume
 - Channel VOD List
 - VOD Player
+- Live Player placeholder
+- Chat panel and VOD replay panel placeholders
+- Chat Plugin Settings
 - Settings
 - Saved watch progress
+- Default local chat plugin settings and diagnostics
 
-The MVP excludes:
+The MVP includes contracts and UI placeholders for:
+- Live playback
 - Live chat
 - VOD chat replay
 - Third-party emotes
+- Local chat plugins
+
+The MVP excludes production implementations of:
+- Real live playback
+- Real Twitch chat transport
+- VOD chat replay fetching
+- Third-party emote network integrations
 - Downloads
+- External plugin loading
 - Public store release polish
 
 Use the provided Stitch output as the visual source of truth. Produce an implementation handoff for Kotlin + Jetpack Compose.
@@ -151,8 +199,11 @@ The handoff must include:
 - Component list: app shell, top bars, list rows, VOD cards, player controls, scrubber, buttons, settings rows, error states
 - Screen-by-screen layout rules
 - State table for loading, empty, auth-needed, offline, playback unavailable, and retrying
+- State table for chat disconnected, chat reconnecting, chat rate-limited, plugin failed, and emote provider unavailable
 - Motion rules with durations and easing
 - Player overlay behavior in portrait and landscape
+- Chat panel behavior over or beside video on phone screens
+- Plugin settings and diagnostics behavior
 - Accessibility notes for touch targets, contrast, and content descriptions
 - A concise DESIGN.md that engineering can commit to the repository
 
@@ -166,16 +217,22 @@ Create `docs/design/artifact-checklist.md` with this content:
 ```markdown
 # Design Artifact Checklist
 
-Engineering starts only after these artifacts exist:
+Final UI polish starts only after these artifacts exist. M1 engineering can run
+from the baseline `DESIGN.md` while Stitch and Claude Design work continues in
+parallel.
 
 - `DESIGN.md` with selected visual direction and design tokens.
 - Stitch export or screenshots for Home / Resume.
 - Stitch export or screenshots for Channel VOD List.
 - Stitch export or screenshots for VOD Player portrait.
 - Stitch export or screenshots for VOD Player landscape/fullscreen.
+- Stitch export or screenshots for Live Player placeholder.
+- Stitch export or screenshots for chat panel and VOD replay panel placeholder.
+- Stitch export or screenshots for Chat Plugin Settings.
 - Stitch export or screenshots for Settings.
 - Claude Design handoff notes for Compose components.
 - Claude Design state table for loading, empty, error, offline, and auth-needed states.
+- Claude Design state table for chat disconnected, chat reconnecting, rate-limited, plugin failed, and emote provider unavailable states.
 - Claude Design motion rules for navigation and player overlays.
 
 The first implementation can use the baseline `DESIGN.md` in this repository while external artifacts are being prepared. Replace it with the Claude Design handoff before final UI polish.
@@ -192,6 +249,8 @@ Create `DESIGN.md` with this content:
 
 M Twitch is a complete Android Twitch client being built through a VOD-first prototype. The prototype interface should feel calm, fast, and playback-centered. It should prioritize resuming content, scanning VOD lists, and controlling playback without visual noise while leaving room for later live chat, chat replay, and emote surfaces.
 
+The first foundation also includes visible homes for live playback, chat, replay, plugin settings, and diagnostics so future work extends the app instead of redesigning it.
+
 ## Visual Style
 
 - Dark-first interface tuned for video viewing.
@@ -203,10 +262,13 @@ M Twitch is a complete Android Twitch client being built through a VOD-first pro
 ## Layout
 
 - Phone-first portrait layout.
-- Bottom navigation is avoided in MVP because there are only four destinations.
+- Bottom navigation is avoided in MVP-A; Home and Settings provide explicit
+  entry points until the primary live/VOD/chat destinations are proven.
 - Home links to channel lookup, recent VODs, settings, and player resume.
 - Player controls appear as an overlay on top of the video surface.
 - Landscape player prioritizes video and hides nonessential UI.
+- Chat surfaces collapse behind a clear affordance on phone-sized screens.
+- Plugin settings are grouped under Settings until chat becomes a primary tab.
 
 ## Motion
 
@@ -229,8 +291,8 @@ Run:
 
 ```powershell
 Test-Path DESIGN.md
-Test-Path docs/design/stitch-mvp-a-prompt.md
-Test-Path docs/design/claude-design-translation-prompt.md
+Test-Path docs/design/stitch-client-foundation-prompt.md
+Test-Path docs/design/claude-design-client-translation-prompt.md
 Test-Path docs/design/artifact-checklist.md
 ```
 
@@ -271,7 +333,31 @@ Expected: commit succeeds.
 - Create: `app/src/main/AndroidManifest.xml`
 - Create: `app/src/main/java/dev/mitchell/mtwitch/MainActivity.kt`
 
-- [ ] **Step 1: Extend `.gitignore`**
+- [ ] **Step 1: Verify Android build versions**
+
+Run:
+
+```powershell
+gradle --version
+```
+
+Expected if Gradle is installed: prints a Gradle version. If `gradle` is not installed, continue with the wrapper version selected from official metadata.
+
+Open and verify these official sources:
+
+```text
+https://services.gradle.org/versions/current
+https://developer.android.com/build/releases/gradle-plugin
+https://kotlinlang.org/docs/releases.html
+https://developer.android.com/jetpack/androidx/releases/media3
+https://developer.android.com/jetpack/androidx/releases/navigation
+https://developer.android.com/jetpack/androidx/releases/datastore
+https://github.com/Kotlin/kotlinx.serialization/releases
+```
+
+Expected: choose the latest stable compatible set before writing `gradle/libs.versions.toml`. Prefer AGP 9.1.0 + Gradle 9.3.1 unless AGP 9.2.x is stable and explicitly lists a compatible Gradle version.
+
+- [ ] **Step 2: Extend `.gitignore`**
 
 Replace `.gitignore` with:
 
@@ -288,7 +374,7 @@ local.properties
 app/build/
 ```
 
-- [ ] **Step 2: Create root Gradle settings**
+- [ ] **Step 3: Create root Gradle settings**
 
 Create `settings.gradle.kts`:
 
@@ -313,7 +399,7 @@ rootProject.name = "M Twitch"
 include(":app")
 ```
 
-- [ ] **Step 3: Create root build file**
+- [ ] **Step 4: Create root build file**
 
 Create `build.gradle.kts`:
 
@@ -322,35 +408,39 @@ plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.compose) apply false
+    alias(libs.plugins.kotlin.serialization) apply false
 }
 ```
 
-- [ ] **Step 4: Create Gradle properties**
+- [ ] **Step 5: Create Gradle properties**
 
 Create `gradle.properties`:
 
 ```properties
 org.gradle.jvmargs=-Xmx4096m -Dfile.encoding=UTF-8
+org.gradle.configuration-cache=true
+org.gradle.parallel=true
 android.useAndroidX=true
 android.nonTransitiveRClass=true
 kotlin.code.style=official
 ```
 
-- [ ] **Step 5: Create version catalog**
+- [ ] **Step 6: Create version catalog**
 
 Create `gradle/libs.versions.toml`:
 
 ```toml
 [versions]
-agp = "9.2.0"
-kotlin = "2.3.21"
+agp = "9.1.0"
+kotlin = "2.3.20"
 composeBom = "2026.04.01"
 activityCompose = "1.13.0"
 lifecycle = "2.10.0"
-navigation = "2.9.8"
+navigation = "2.9.7"
 media3 = "1.10.0"
 datastore = "1.2.1"
 coroutines = "1.10.2"
+serialization = "1.11.0"
 junit = "4.13.2"
 
 [libraries]
@@ -369,15 +459,17 @@ androidx-media3-ui-compose = { module = "androidx.media3:media3-ui-compose", ver
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
+kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "serialization" }
 junit = { module = "junit:junit", version.ref = "junit" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ```
 
-- [ ] **Step 6: Create app build file**
+- [ ] **Step 7: Create app build file**
 
 Create `app/build.gradle.kts`:
 
@@ -386,6 +478,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -423,6 +516,7 @@ dependencies {
     implementation(libs.androidx.media3.ui.compose)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.serialization.core)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
 
@@ -431,7 +525,7 @@ dependencies {
 }
 ```
 
-- [ ] **Step 7: Create manifest**
+- [ ] **Step 8: Create manifest**
 
 Create `app/src/main/AndroidManifest.xml`:
 
@@ -459,7 +553,7 @@ Create `app/src/main/AndroidManifest.xml`:
 </manifest>
 ```
 
-- [ ] **Step 8: Create Android theme resource**
+- [ ] **Step 9: Create Android theme resource**
 
 Create `app/src/main/res/values/styles.xml`:
 
@@ -469,7 +563,7 @@ Create `app/src/main/res/values/styles.xml`:
 </resources>
 ```
 
-- [ ] **Step 9: Create launcher foreground resources**
+- [ ] **Step 10: Create launcher foreground resources**
 
 Create `app/src/main/res/drawable/ic_launcher_foreground.xml`:
 
@@ -514,7 +608,7 @@ Create `app/src/main/res/values/colors.xml`:
 </resources>
 ```
 
-- [ ] **Step 10: Create temporary MainActivity**
+- [ ] **Step 11: Create temporary MainActivity**
 
 Create `app/src/main/java/dev/mitchell/mtwitch/MainActivity.kt`:
 
@@ -544,21 +638,21 @@ class MainActivity : ComponentActivity() {
 }
 ```
 
-- [ ] **Step 11: Generate Gradle wrapper**
+- [ ] **Step 12: Generate Gradle wrapper**
 
 If `gradle` is not installed, run these commands from the repository root:
 
 ```powershell
-$gradleZip = Join-Path $env:TEMP "gradle-9.4.1-bin.zip"
-$gradleHome = Join-Path $env:TEMP "gradle-9.4.1"
-Invoke-WebRequest -Uri "https://services.gradle.org/distributions/gradle-9.4.1-bin.zip" -OutFile $gradleZip
+$gradleZip = Join-Path $env:TEMP "gradle-9.3.1-bin.zip"
+$gradleHome = Join-Path $env:TEMP "gradle-9.3.1"
+Invoke-WebRequest -Uri "https://services.gradle.org/distributions/gradle-9.3.1-bin.zip" -OutFile $gradleZip
 Expand-Archive -LiteralPath $gradleZip -DestinationPath $env:TEMP -Force
-& "$gradleHome\bin\gradle.bat" wrapper --gradle-version 9.4.1 --distribution-type bin
+& "$gradleHome\bin\gradle.bat" wrapper --gradle-version 9.3.1 --distribution-type bin
 ```
 
-Expected: wrapper files are generated in the repository.
+Expected: wrapper files are generated in the repository. If the version verification step selected a different stable AGP-compatible Gradle version, use that verified version in the download URL, `$gradleHome`, and wrapper command.
 
-- [ ] **Step 12: Verify Gradle wrapper version**
+- [ ] **Step 13: Verify Gradle wrapper version**
 
 Run:
 
@@ -566,9 +660,9 @@ Run:
 .\gradlew.bat --version
 ```
 
-Expected: output includes `Gradle 9.4.1`.
+Expected: output includes the verified stable Gradle version, initially `Gradle 9.3.1`.
 
-- [ ] **Step 13: Run initial Android test task**
+- [ ] **Step 14: Run initial Android test task**
 
 Run:
 
@@ -578,7 +672,7 @@ Run:
 
 Expected: build succeeds with no unit tests found or all tests passing.
 
-- [ ] **Step 14: Commit Android foundation scaffold**
+- [ ] **Step 15: Commit Android foundation scaffold**
 
 Run:
 
@@ -615,12 +709,14 @@ class VodModelsTest {
         val progress = WatchProgress(
             videoId = VideoId("123"),
             positionMs = 75_000L,
+            durationMs = 150.minutes.inWholeMilliseconds,
             updatedAtEpochMs = 1_000L,
         )
 
-        assertEquals(0.5f, progress.fractionOf(150.minutes), 0.0001f)
-        assertEquals(1f, progress.copy(positionMs = 10_000_000L).fractionOf(10.minutes), 0.0001f)
-        assertEquals(0f, progress.copy(positionMs = -100L).fractionOf(10.minutes), 0.0001f)
+        assertEquals(0.5f, progress.fraction, 0.0001f)
+        assertEquals(1f, progress.copy(positionMs = 10_000_000L).fraction, 0.0001f)
+        assertEquals(0f, progress.copy(positionMs = -100L).fraction, 0.0001f)
+        assertEquals(0f, progress.copy(durationMs = null).fraction, 0.0001f)
     }
 
     @Test
@@ -636,6 +732,7 @@ class VodModelsTest {
             progress = WatchProgress(
                 videoId = VideoId("456"),
                 positionMs = 30_000L,
+                durationMs = 90.minutes.inWholeMilliseconds,
                 updatedAtEpochMs = 3_000L,
             ),
         )
@@ -676,14 +773,16 @@ value class ChannelId(val value: String)
 data class WatchProgress(
     val videoId: VideoId,
     val positionMs: Long,
+    val durationMs: Long?,
     val updatedAtEpochMs: Long,
 ) {
-    fun fractionOf(duration: Duration): Float {
-        val durationMs = duration.inWholeMilliseconds
-        if (durationMs <= 0L) return 0f
-        val clampedPosition = min(max(positionMs, 0L), durationMs)
-        return clampedPosition.toFloat() / durationMs.toFloat()
-    }
+    val fraction: Float
+        get() {
+            val knownDurationMs = durationMs ?: return 0f
+            if (knownDurationMs <= 0L) return 0f
+            val clampedPosition = min(max(positionMs, 0L), knownDurationMs)
+            return clampedPosition.toFloat() / knownDurationMs.toFloat()
+        }
 }
 
 data class Vod(
@@ -747,8 +846,8 @@ class InMemoryWatchHistoryRepositoryTest {
     @Test
     fun saveProgressStoresLatestProgressForVideo() = runTest {
         val repository = InMemoryWatchHistoryRepository()
-        val first = WatchProgress(VideoId("1"), positionMs = 5_000L, updatedAtEpochMs = 10L)
-        val second = WatchProgress(VideoId("1"), positionMs = 8_000L, updatedAtEpochMs = 20L)
+        val first = WatchProgress(VideoId("1"), positionMs = 5_000L, durationMs = 60_000L, updatedAtEpochMs = 10L)
+        val second = WatchProgress(VideoId("1"), positionMs = 8_000L, durationMs = 60_000L, updatedAtEpochMs = 20L)
 
         repository.saveProgress(first)
         repository.saveProgress(second)
@@ -760,7 +859,7 @@ class InMemoryWatchHistoryRepositoryTest {
     @Test
     fun clearRemovesAllProgress() = runTest {
         val repository = InMemoryWatchHistoryRepository()
-        repository.saveProgress(WatchProgress(VideoId("1"), positionMs = 5_000L, updatedAtEpochMs = 10L))
+        repository.saveProgress(WatchProgress(VideoId("1"), positionMs = 5_000L, durationMs = 60_000L, updatedAtEpochMs = 10L))
 
         repository.clear()
 
@@ -840,6 +939,11 @@ class InMemoryWatchHistoryRepository : WatchHistoryRepository {
 }
 ```
 
+This in-memory implementation is intentionally simple for M1. Do not copy the
+`sortedByDescending` write-path pattern into DataStore or Room; persisted
+history should maintain query-friendly ordering instead of sorting all rows on
+every save.
+
 - [ ] **Step 5: Run repository tests**
 
 Run:
@@ -876,6 +980,7 @@ Create `app/src/test/java/dev/mitchell/mtwitch/data/playback/FakePlaybackSourceR
 ```kotlin
 package dev.mitchell.mtwitch.data.playback
 
+import dev.mitchell.mtwitch.core.model.ChannelId
 import dev.mitchell.mtwitch.core.model.VideoId
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -888,17 +993,36 @@ class FakePlaybackSourceResolverTest {
         val resolver = FakePlaybackSourceResolver(
             result = PlaybackSourceResult.Ready(
                 source = PlaybackSource(
-                    videoId = VideoId("123"),
+                    request = PlaybackRequest.Vod(VideoId("123")),
                     hlsUrl = "https://example.com/vod.m3u8",
+                    isLive = false,
+                    timelineIssues = listOf(
+                        PlaybackTimelineIssue(
+                            startMs = 30_000L,
+                            endMs = 45_000L,
+                            reason = PlaybackTimelineIssueReason.MutedSegment,
+                        ),
+                    ),
                 ),
             ),
         )
 
-        val result = resolver.resolve(VideoId("123"))
+        val result = resolver.resolve(PlaybackRequest.Vod(VideoId("123")))
 
         assertEquals(
             PlaybackSourceResult.Ready(
-                PlaybackSource(VideoId("123"), "https://example.com/vod.m3u8"),
+                PlaybackSource(
+                    request = PlaybackRequest.Vod(VideoId("123")),
+                    hlsUrl = "https://example.com/vod.m3u8",
+                    isLive = false,
+                    timelineIssues = listOf(
+                        PlaybackTimelineIssue(
+                            startMs = 30_000L,
+                            endMs = 45_000L,
+                            reason = PlaybackTimelineIssueReason.MutedSegment,
+                        ),
+                    ),
+                ),
             ),
             result,
         )
@@ -910,9 +1034,41 @@ class FakePlaybackSourceResolverTest {
             result = PlaybackSourceResult.Unavailable(PlaybackUnavailableReason.SourceMissing),
         )
 
-        val result = resolver.resolve(VideoId("missing"))
+        val result = resolver.resolve(PlaybackRequest.Vod(VideoId("missing")))
 
         assertTrue(result is PlaybackSourceResult.Unavailable)
+    }
+
+    @Test
+    fun resolverAcceptsLivePlaybackRequests() = runTest {
+        val request = PlaybackRequest.Live(
+            channelId = ChannelId("channel-1"),
+            channelLogin = "cohhcarnage",
+        )
+        val resolver = FakePlaybackSourceResolver(
+            result = PlaybackSourceResult.Ready(
+                source = PlaybackSource(
+                    request = request,
+                    hlsUrl = "https://example.com/live.m3u8",
+                    isLive = true,
+                    timelineIssues = emptyList(),
+                ),
+            ),
+        )
+
+        val result = resolver.resolve(request)
+
+        assertEquals(
+            PlaybackSourceResult.Ready(
+                PlaybackSource(
+                    request = request,
+                    hlsUrl = "https://example.com/live.m3u8",
+                    isLive = true,
+                    timelineIssues = emptyList(),
+                ),
+            ),
+            result,
+        )
     }
 }
 ```
@@ -934,11 +1090,34 @@ Create `app/src/main/java/dev/mitchell/mtwitch/data/playback/PlaybackSourceModel
 ```kotlin
 package dev.mitchell.mtwitch.data.playback
 
+import dev.mitchell.mtwitch.core.model.ChannelId
 import dev.mitchell.mtwitch.core.model.VideoId
 
+sealed interface PlaybackRequest {
+    data class Vod(val videoId: VideoId) : PlaybackRequest
+    data class Live(
+        val channelId: ChannelId,
+        val channelLogin: String,
+    ) : PlaybackRequest
+}
+
 data class PlaybackSource(
-    val videoId: VideoId,
+    val request: PlaybackRequest,
     val hlsUrl: String,
+    val isLive: Boolean,
+    val timelineIssues: List<PlaybackTimelineIssue>,
+)
+
+data class PlaybackTimelineIssue(
+    val startMs: Long,
+    val endMs: Long,
+    val reason: PlaybackTimelineIssueReason,
+)
+
+enum class PlaybackTimelineIssueReason {
+    MutedSegment,
+    Discontinuity,
+    Unknown,
 )
 
 sealed interface PlaybackSourceResult {
@@ -950,10 +1129,13 @@ enum class PlaybackUnavailableReason {
     SourceMissing,
     TokenRejected,
     NetworkTimeout,
+    StreamOffline,
+    AuthRequired,
+    RateLimited,
 }
 
 interface PlaybackSourceResolver {
-    suspend fun resolve(videoId: VideoId): PlaybackSourceResult
+    suspend fun resolve(request: PlaybackRequest): PlaybackSourceResult
 }
 ```
 
@@ -964,15 +1146,13 @@ Create `app/src/main/java/dev/mitchell/mtwitch/data/playback/FakePlaybackSourceR
 ```kotlin
 package dev.mitchell.mtwitch.data.playback
 
-import dev.mitchell.mtwitch.core.model.VideoId
-
 class FakePlaybackSourceResolver(
     private val result: PlaybackSourceResult,
 ) : PlaybackSourceResolver {
-    override suspend fun resolve(videoId: VideoId): PlaybackSourceResult {
+    override suspend fun resolve(request: PlaybackRequest): PlaybackSourceResult {
         return when (result) {
             is PlaybackSourceResult.Ready -> result.copy(
-                source = result.source.copy(videoId = videoId),
+                source = result.source.copy(request = request),
             )
             is PlaybackSourceResult.Unavailable -> result
         }
@@ -1001,7 +1181,302 @@ git commit -m "feat: add playback source contract"
 
 Expected: commit succeeds.
 
-## Task 6: Navigation And Compose Screen Shell
+## Task 6: Chat Plugin Foundation Contract
+
+**Files:**
+
+- Create: `app/src/test/java/dev/mitchell/mtwitch/plugin/chat/ChatPluginRegistryTest.kt`
+- Create: `app/src/main/java/dev/mitchell/mtwitch/data/chat/ChatModels.kt`
+- Create: `app/src/main/java/dev/mitchell/mtwitch/plugin/chat/ChatPlugin.kt`
+- Create: `app/src/main/java/dev/mitchell/mtwitch/plugin/chat/DefaultChatPlugin.kt`
+
+- [ ] **Step 1: Write failing chat plugin tests**
+
+Create `app/src/test/java/dev/mitchell/mtwitch/plugin/chat/ChatPluginRegistryTest.kt`:
+
+```kotlin
+package dev.mitchell.mtwitch.plugin.chat
+
+import dev.mitchell.mtwitch.core.model.ChannelId
+import dev.mitchell.mtwitch.data.chat.ChatEvent
+import dev.mitchell.mtwitch.data.chat.ChatMessage
+import dev.mitchell.mtwitch.data.chat.ChatMessageFragment
+import dev.mitchell.mtwitch.data.chat.ChatMessageId
+import dev.mitchell.mtwitch.data.chat.ChatUserId
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+class ChatPluginRegistryTest {
+    private val sampleEvent = ChatEvent.MessageReceived(
+        channelId = ChannelId("channel-1"),
+        message = ChatMessage(
+            id = ChatMessageId("message-1"),
+            userId = ChatUserId("user-1"),
+            userLogin = "viewer",
+            userDisplayName = "Viewer",
+            fragments = listOf(ChatMessageFragment.Text("hello")),
+            timestampEpochMs = 1_000L,
+        ),
+    )
+
+    @Test
+    fun registryDispatchesToEnabledDefaultPlugin() {
+        val registry = ChatPluginRegistry(
+            plugins = listOf(DefaultChatPlugin),
+            enabledPluginIds = setOf(DefaultChatPlugin.id),
+        )
+
+        val actions = registry.dispatch(sampleEvent)
+
+        assertEquals(
+            listOf(
+                ChatPluginAction.AddLocalNotice(
+                    pluginId = "default-chat",
+                    message = "Default chat plugin observed: hello",
+                ),
+            ),
+            actions,
+        )
+    }
+
+    @Test
+    fun registrySkipsDisabledPlugins() {
+        val registry = ChatPluginRegistry(
+            plugins = listOf(DefaultChatPlugin),
+            enabledPluginIds = emptySet(),
+        )
+
+        assertTrue(registry.dispatch(sampleEvent).isEmpty())
+    }
+
+    @Test
+    fun registryTurnsPluginFailuresIntoDiagnostics() {
+        val brokenPlugin = object : ChatPlugin {
+            override val id: String = "broken"
+            override val displayName: String = "Broken"
+            override val enabledByDefault: Boolean = true
+
+            override fun handle(event: ChatEvent): List<ChatPluginAction> {
+                error("boom")
+            }
+        }
+        val registry = ChatPluginRegistry(
+            plugins = listOf(brokenPlugin),
+            enabledPluginIds = setOf("broken"),
+        )
+
+        val actions = registry.dispatch(sampleEvent)
+
+        assertEquals(
+            listOf(ChatPluginAction.PluginFailed(pluginId = "broken", reason = "boom")),
+            actions,
+        )
+    }
+}
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run:
+
+```powershell
+.\gradlew.bat :app:testDebugUnitTest --tests "dev.mitchell.mtwitch.plugin.chat.ChatPluginRegistryTest"
+```
+
+Expected: FAIL with unresolved references to `ChatPluginRegistry`, `DefaultChatPlugin`, `ChatEvent`, and `ChatMessage`.
+
+- [ ] **Step 3: Add normalized chat models**
+
+Create `app/src/main/java/dev/mitchell/mtwitch/data/chat/ChatModels.kt`:
+
+```kotlin
+package dev.mitchell.mtwitch.data.chat
+
+import dev.mitchell.mtwitch.core.model.ChannelId
+
+@JvmInline
+value class ChatMessageId(val value: String)
+
+@JvmInline
+value class ChatUserId(val value: String)
+
+@JvmInline
+value class EmoteId(val value: String)
+
+enum class ChatConnectionState {
+    Disconnected,
+    Connecting,
+    Connected,
+    Reconnecting,
+    RateLimited,
+}
+
+sealed interface ChatMessageFragment {
+    val text: String
+
+    data class Text(override val text: String) : ChatMessageFragment
+
+    data class Emote(
+        override val text: String,
+        val emoteId: EmoteId,
+        val imageUrl: String?,
+    ) : ChatMessageFragment
+}
+
+data class ChatMessage(
+    val id: ChatMessageId,
+    val userId: ChatUserId,
+    val userLogin: String,
+    val userDisplayName: String,
+    val fragments: List<ChatMessageFragment>,
+    val timestampEpochMs: Long,
+) {
+    val plainText: String = fragments.joinToString(separator = "") { it.text }
+}
+
+sealed interface ChatEvent {
+    data class MessageReceived(
+        val channelId: ChannelId,
+        val message: ChatMessage,
+    ) : ChatEvent
+
+    data class MessageDeleted(
+        val channelId: ChannelId,
+        val messageId: ChatMessageId,
+    ) : ChatEvent
+
+    data class ConnectionStateChanged(
+        val channelId: ChannelId,
+        val state: ChatConnectionState,
+    ) : ChatEvent
+}
+
+data class EmoteReference(
+    val providerId: String,
+    val emoteId: EmoteId,
+    val code: String,
+    val imageUrl: String,
+)
+
+interface EmoteProvider {
+    val id: String
+
+    suspend fun resolve(
+        code: String,
+        channelId: ChannelId,
+    ): EmoteReference?
+}
+```
+
+- [ ] **Step 4: Add chat plugin API and registry**
+
+Create `app/src/main/java/dev/mitchell/mtwitch/plugin/chat/ChatPlugin.kt`:
+
+```kotlin
+package dev.mitchell.mtwitch.plugin.chat
+
+import dev.mitchell.mtwitch.data.chat.ChatEvent
+
+interface ChatPlugin {
+    val id: String
+    val displayName: String
+    val enabledByDefault: Boolean
+
+    fun handle(event: ChatEvent): List<ChatPluginAction>
+}
+
+sealed interface ChatPluginAction {
+    val pluginId: String
+
+    data class AddLocalNotice(
+        override val pluginId: String,
+        val message: String,
+    ) : ChatPluginAction
+
+    data class PluginFailed(
+        override val pluginId: String,
+        val reason: String,
+    ) : ChatPluginAction
+}
+
+class ChatPluginRegistry(
+    private val plugins: List<ChatPlugin>,
+    private val enabledPluginIds: Set<String> = plugins
+        .filter { it.enabledByDefault }
+        .map { it.id }
+        .toSet(),
+) {
+    fun dispatch(event: ChatEvent): List<ChatPluginAction> {
+        return plugins
+            .filter { plugin -> plugin.id in enabledPluginIds }
+            .flatMap { plugin ->
+                try {
+                    plugin.handle(event)
+                } catch (error: Throwable) {
+                    listOf(
+                        ChatPluginAction.PluginFailed(
+                            pluginId = plugin.id,
+                            reason = error.message ?: error.javaClass.simpleName,
+                        ),
+                    )
+                }
+            }
+    }
+}
+```
+
+- [ ] **Step 5: Add default local chat plugin**
+
+Create `app/src/main/java/dev/mitchell/mtwitch/plugin/chat/DefaultChatPlugin.kt`:
+
+```kotlin
+package dev.mitchell.mtwitch.plugin.chat
+
+import dev.mitchell.mtwitch.data.chat.ChatEvent
+
+data object DefaultChatPlugin : ChatPlugin {
+    override val id: String = "default-chat"
+    override val displayName: String = "Default Chat"
+    override val enabledByDefault: Boolean = true
+
+    override fun handle(event: ChatEvent): List<ChatPluginAction> {
+        return when (event) {
+            is ChatEvent.MessageReceived -> listOf(
+                ChatPluginAction.AddLocalNotice(
+                    pluginId = id,
+                    message = "Default chat plugin observed: ${event.message.plainText}",
+                ),
+            )
+            is ChatEvent.MessageDeleted,
+            is ChatEvent.ConnectionStateChanged -> emptyList()
+        }
+    }
+}
+```
+
+- [ ] **Step 6: Run chat plugin tests**
+
+Run:
+
+```powershell
+.\gradlew.bat :app:testDebugUnitTest --tests "dev.mitchell.mtwitch.plugin.chat.ChatPluginRegistryTest"
+```
+
+Expected: PASS.
+
+- [ ] **Step 7: Commit chat plugin foundation**
+
+Run:
+
+```powershell
+git add app/src/main/java/dev/mitchell/mtwitch/data/chat app/src/main/java/dev/mitchell/mtwitch/plugin/chat app/src/test/java/dev/mitchell/mtwitch/plugin/chat
+git commit -m "feat: add chat plugin foundation"
+```
+
+Expected: commit succeeds.
+
+## Task 7: Navigation And Compose Screen Shell
 
 **Files:**
 
@@ -1011,6 +1486,8 @@ Expected: commit succeeds.
 - Create: `app/src/main/java/dev/mitchell/mtwitch/feature/home/HomeScreen.kt`
 - Create: `app/src/main/java/dev/mitchell/mtwitch/feature/channel/ChannelVodListScreen.kt`
 - Create: `app/src/main/java/dev/mitchell/mtwitch/feature/player/PlayerScreen.kt`
+- Create: `app/src/main/java/dev/mitchell/mtwitch/feature/live/LivePlayerScreen.kt`
+- Create: `app/src/main/java/dev/mitchell/mtwitch/feature/plugins/ChatPluginSettingsScreen.kt`
 - Create: `app/src/main/java/dev/mitchell/mtwitch/feature/settings/SettingsScreen.kt`
 - Create: `app/src/main/java/dev/mitchell/mtwitch/MtwitchApp.kt`
 - Modify: `app/src/main/java/dev/mitchell/mtwitch/MainActivity.kt`
@@ -1027,17 +1504,17 @@ import org.junit.Test
 
 class AppRouteTest {
     @Test
-    fun routesUseStablePathSegments() {
-        assertEquals("home", AppRoute.Home.path)
-        assertEquals("channel/{channelLogin}", AppRoute.Channel.path)
-        assertEquals("player/{videoId}", AppRoute.Player.path)
-        assertEquals("settings", AppRoute.Settings.path)
+    fun routesUseTypedValuesInsteadOfStringBuilders() {
+        assertEquals(AppRoute.Home, AppRoute.Home)
+        assertEquals(AppRoute.Settings, AppRoute.Settings)
+        assertEquals(AppRoute.ChatPlugins, AppRoute.ChatPlugins)
     }
 
     @Test
-    fun routeBuildersEncodeDynamicValues() {
-        assertEquals("channel/cohhcarnage", AppRoute.Channel.create("cohhcarnage"))
-        assertEquals("player/123456789", AppRoute.Player.create("123456789"))
+    fun dynamicRoutesCarryTypedArguments() {
+        assertEquals("cohhcarnage", AppRoute.Channel(channelLogin = "cohhcarnage").channelLogin)
+        assertEquals("123456789", AppRoute.Player(videoId = "123456789").videoId)
+        assertEquals("cohhcarnage", AppRoute.Live(channelLogin = "cohhcarnage").channelLogin)
     }
 }
 ```
@@ -1059,17 +1536,26 @@ Create `app/src/main/java/dev/mitchell/mtwitch/navigation/AppRoute.kt`:
 ```kotlin
 package dev.mitchell.mtwitch.navigation
 
-sealed class AppRoute(val path: String) {
-    data object Home : AppRoute("home")
-    data object Settings : AppRoute("settings")
+import kotlinx.serialization.Serializable
 
-    data object Channel : AppRoute("channel/{channelLogin}") {
-        fun create(channelLogin: String): String = "channel/$channelLogin"
-    }
+sealed interface AppRoute {
+    @Serializable
+    data object Home : AppRoute
 
-    data object Player : AppRoute("player/{videoId}") {
-        fun create(videoId: String): String = "player/$videoId"
-    }
+    @Serializable
+    data object Settings : AppRoute
+
+    @Serializable
+    data object ChatPlugins : AppRoute
+
+    @Serializable
+    data class Channel(val channelLogin: String) : AppRoute
+
+    @Serializable
+    data class Player(val videoId: String) : AppRoute
+
+    @Serializable
+    data class Live(val channelLogin: String) : AppRoute
 }
 ```
 
@@ -1167,6 +1653,8 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun HomeScreen(
     onOpenChannel: (String) -> Unit,
+    onOpenLive: (String) -> Unit,
+    onOpenChatPlugins: () -> Unit,
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -1217,8 +1705,23 @@ fun HomeScreen(
             Text(text = "Open VODs")
         }
 
+        Button(
+            onClick = { onOpenLive(channelLogin) },
+            enabled = channelLogin.isNotBlank(),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(text = "Open Live Placeholder")
+        }
+
+        Button(
+            onClick = onOpenChatPlugins,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(text = "Chat Plugins")
+        }
+
         Text(
-            text = "Recent VODs will appear here after playback progress is saved.",
+            text = "Recent VODs, live channels, and chat diagnostics will appear here as the client grows.",
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyMedium,
         )
@@ -1387,7 +1890,109 @@ fun PlayerScreen(
 }
 ```
 
-- [ ] **Step 9: Add Settings screen**
+- [ ] **Step 9: Add Live player placeholder screen**
+
+Create `app/src/main/java/dev/mitchell/mtwitch/feature/live/LivePlayerScreen.kt`:
+
+```kotlin
+package dev.mitchell.mtwitch.feature.live
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+
+@Composable
+fun LivePlayerScreen(
+    channelLogin: String,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Button(onClick = onBack) {
+            Text(text = "Back")
+        }
+        Text(
+            text = "$channelLogin Live",
+            style = MaterialTheme.typography.headlineSmall,
+        )
+        Text(
+            text = "Live playback will use the shared Media3 player contract after stream resolution is implemented.",
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Text(
+            text = "Chat panel placeholder: default local plugin is enabled, real chat transport arrives in the chat milestone.",
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+```
+
+- [ ] **Step 10: Add Chat Plugin Settings screen**
+
+Create `app/src/main/java/dev/mitchell/mtwitch/feature/plugins/ChatPluginSettingsScreen.kt`:
+
+```kotlin
+package dev.mitchell.mtwitch.feature.plugins
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import dev.mitchell.mtwitch.plugin.chat.DefaultChatPlugin
+
+@Composable
+fun ChatPluginSettingsScreen(
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Button(onClick = onBack) {
+            Text(text = "Back")
+        }
+        Text(
+            text = "Chat Plugins",
+            style = MaterialTheme.typography.headlineSmall,
+        )
+        Text(text = DefaultChatPlugin.displayName)
+        Switch(
+            checked = DefaultChatPlugin.enabledByDefault,
+            onCheckedChange = {},
+        )
+        Text(
+            text = "The default local plugin is compiled into the app. Future plugins must use the same typed contract.",
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+```
+
+- [ ] **Step 11: Add Settings screen**
 
 Create `app/src/main/java/dev/mitchell/mtwitch/feature/settings/SettingsScreen.kt`:
 
@@ -1431,7 +2036,7 @@ fun SettingsScreen(
 }
 ```
 
-- [ ] **Step 10: Add root app navigation**
+- [ ] **Step 12: Add root app navigation**
 
 Create `app/src/main/java/dev/mitchell/mtwitch/MtwitchApp.kt`:
 
@@ -1439,14 +2044,15 @@ Create `app/src/main/java/dev/mitchell/mtwitch/MtwitchApp.kt`:
 package dev.mitchell.mtwitch
 
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavType
+import androidx.navigation.toRoute
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import dev.mitchell.mtwitch.feature.channel.ChannelVodListScreen
 import dev.mitchell.mtwitch.feature.home.HomeScreen
+import dev.mitchell.mtwitch.feature.live.LivePlayerScreen
 import dev.mitchell.mtwitch.feature.player.PlayerScreen
+import dev.mitchell.mtwitch.feature.plugins.ChatPluginSettingsScreen
 import dev.mitchell.mtwitch.feature.settings.SettingsScreen
 import dev.mitchell.mtwitch.navigation.AppRoute
 
@@ -1456,49 +2062,59 @@ fun MtwitchApp() {
 
     NavHost(
         navController = navController,
-        startDestination = AppRoute.Home.path,
+        startDestination = AppRoute.Home,
     ) {
-        composable(AppRoute.Home.path) {
+        composable<AppRoute.Home> {
             HomeScreen(
                 onOpenChannel = { channelLogin ->
-                    navController.navigate(AppRoute.Channel.create(channelLogin))
+                    navController.navigate(AppRoute.Channel(channelLogin))
+                },
+                onOpenLive = { channelLogin ->
+                    navController.navigate(AppRoute.Live(channelLogin))
+                },
+                onOpenChatPlugins = {
+                    navController.navigate(AppRoute.ChatPlugins)
                 },
                 onOpenSettings = {
-                    navController.navigate(AppRoute.Settings.path)
+                    navController.navigate(AppRoute.Settings)
                 },
             )
         }
-        composable(
-            route = AppRoute.Channel.path,
-            arguments = listOf(navArgument("channelLogin") { type = NavType.StringType }),
-        ) { backStackEntry ->
-            val channelLogin = requireNotNull(backStackEntry.arguments?.getString("channelLogin"))
+        composable<AppRoute.Channel> { backStackEntry ->
+            val route = backStackEntry.toRoute<AppRoute.Channel>()
             ChannelVodListScreen(
-                channelLogin = channelLogin,
+                channelLogin = route.channelLogin,
                 onOpenVod = { videoId ->
-                    navController.navigate(AppRoute.Player.create(videoId.value))
+                    navController.navigate(AppRoute.Player(videoId.value))
                 },
                 onBack = { navController.popBackStack() },
             )
         }
-        composable(
-            route = AppRoute.Player.path,
-            arguments = listOf(navArgument("videoId") { type = NavType.StringType }),
-        ) { backStackEntry ->
-            val videoId = requireNotNull(backStackEntry.arguments?.getString("videoId"))
+        composable<AppRoute.Player> { backStackEntry ->
+            val route = backStackEntry.toRoute<AppRoute.Player>()
             PlayerScreen(
-                videoId = videoId,
+                videoId = route.videoId,
                 onBack = { navController.popBackStack() },
             )
         }
-        composable(AppRoute.Settings.path) {
+        composable<AppRoute.Live> { backStackEntry ->
+            val route = backStackEntry.toRoute<AppRoute.Live>()
+            LivePlayerScreen(
+                channelLogin = route.channelLogin,
+                onBack = { navController.popBackStack() },
+            )
+        }
+        composable<AppRoute.ChatPlugins> {
+            ChatPluginSettingsScreen(onBack = { navController.popBackStack() })
+        }
+        composable<AppRoute.Settings> {
             SettingsScreen(onBack = { navController.popBackStack() })
         }
     }
 }
 ```
 
-- [ ] **Step 11: Update MainActivity**
+- [ ] **Step 13: Update MainActivity**
 
 Replace `app/src/main/java/dev/mitchell/mtwitch/MainActivity.kt` with:
 
@@ -1524,7 +2140,7 @@ class MainActivity : ComponentActivity() {
 }
 ```
 
-- [ ] **Step 12: Run all unit tests**
+- [ ] **Step 14: Run all unit tests**
 
 Run:
 
@@ -1534,7 +2150,7 @@ Run:
 
 Expected: PASS.
 
-- [ ] **Step 13: Build debug APK**
+- [ ] **Step 15: Build debug APK**
 
 Run:
 
@@ -1544,7 +2160,7 @@ Run:
 
 Expected: PASS and APK exists at `app/build/outputs/apk/debug/app-debug.apk`.
 
-- [ ] **Step 14: Commit app shell**
+- [ ] **Step 16: Commit app shell**
 
 Run:
 
@@ -1555,11 +2171,11 @@ git commit -m "feat: add Compose app shell"
 
 Expected: commit succeeds.
 
-## Task 7: M0-M1 Verification
+## Task 8: M0-M1 Verification
 
 **Files:**
 
-- Modify only if needed after verification: files touched in Tasks 1-6.
+- Modify only if needed after verification: files touched in Tasks 1-7.
 
 - [ ] **Step 1: Run unit tests**
 
@@ -1605,6 +2221,8 @@ Open the app on the device or emulator and verify:
 - Entering a channel login enables the Open VODs button.
 - Open VODs navigates to the VOD list screen.
 - Tapping the sample VOD opens the player screen.
+- Open Live Placeholder navigates to the live placeholder screen.
+- Chat Plugins opens the default local plugin settings screen.
 - Back buttons return to previous screens.
 - Settings opens from Home.
 
@@ -1629,30 +2247,57 @@ git commit -m "fix: stabilize Android foundation"
 
 Expected: commit succeeds only if files changed.
 
+## Immediate Post-M1 Playback Spike
+
+Run this spike before starting VOD discovery UI beyond fake data. It is not part
+of the M1 compile gate, but it is the next blocking technical risk.
+
+**Goal:** prove `channel login -> VOD ID -> PlaybackAccessToken -> playable HLS
+manifest` outside the UI.
+
+**Output:** create `docs/spikes/playback-feasibility.md` with:
+
+- Tool used: `curl`, a small Kotlin/JVM script, or an OkHttp console runner.
+- Tested channel login.
+- Tested normal VOD ID.
+- Tested muted or partially muted VOD ID.
+- Token request shape and required headers, with secrets redacted.
+- Manifest URL shape, variant playlist observations, muted/discontinuous segment
+  observations, and Media3 assumptions.
+- Failure modes and whether the next playback plan can proceed.
+
+**Gate:** do not begin the real M3 playback plan until this spike records a
+working playable manifest or chooses a replacement playback strategy.
+
 ## Self-Review Checklist
 
 - Spec coverage:
   - Design workflow artifacts are covered by Task 1.
   - Android project structure is covered by Task 2.
-  - Compose navigation shell is covered by Task 6.
-  - Theme based on `DESIGN.md` is covered by Tasks 1 and 6.
-  - Account/auth is represented at the design/settings surface level in Task 6; real OAuth belongs to the next plan.
+  - Compose navigation shell is covered by Task 7.
+  - Theme based on `DESIGN.md` is covered by Tasks 1 and 7.
+  - Account/auth is represented at the design/settings surface level in Task 7; real OAuth belongs to a later OAuth milestone so it does not block public VOD playback.
   - Local settings/history storage boundary is covered by Task 4.
-  - Playback resolution boundary is covered by Task 5; real HLS resolution belongs to the playback plan.
+  - Playback resolution boundary and muted/discontinuous timeline issue metadata are covered by Task 5; real HLS resolution belongs to the playback feasibility spike and playback plan.
+  - Chat event, emote provider, chat plugin, default local plugin, and plugin failure isolation contracts are covered by Task 6.
+  - Live playback and chat plugin settings are represented in navigation and UI placeholders in Task 7.
 - Completeness scan:
   - No incomplete file paths.
   - No empty tasks.
   - External design outputs are handled through concrete prompt and checklist files.
 - Type consistency:
   - `VideoId`, `ChannelId`, `WatchProgress`, and `Vod` are defined before use.
-  - `AppRoute` route strings match tests and navigation.
+  - `AppRoute` typed route classes match tests and navigation.
   - `PlaybackSourceResolver` result types match tests and fake implementation.
+  - `ChatEvent`, `ChatMessage`, `ChatPluginAction`, and `DefaultChatPlugin` names match tests and implementation snippets.
 
 ## Next Plans After This One
 
-- M2 VOD Discovery: Twitch OAuth, channel lookup, Get Videos API, VOD list states.
-- M3 VOD Playback: playback token/source resolution, Media3 player, scrubber, lifecycle, fullscreen.
-- M4 Personal Usability: persisted DataStore or Room history, recent VODs, diagnostics, device performance pass.
-- M5 Live Playback: live channel playback, stream metadata, and low-latency player options.
-- M6 Live Chat And Emotes: Twitch chat plus BTTV, FFZ, and 7TV emote rendering.
-- M7 VOD Chat Replay: replay fetching, time sync, seek behavior, and emote-aware rendering.
+- M2 Playback Feasibility Spike: standalone channel to VOD ID to playback token to playable HLS manifest validation, including one muted VOD sample.
+- M3 VOD Discovery And Playback: VOD list states, playback token/source resolution, Media3 player, scrubber, muted segment metadata, fullscreen.
+- M4 OAuth And Account: mobile OAuth, token refresh, account state, followed/private surfaces, chat-send prerequisites.
+- M5 Live Playback: live channel playback, stream metadata, reconnect/offline states, low-latency player options.
+- M6 Live Chat And Default Plugin: selected Twitch chat transport, normalized events, send-message scopes/rate limits, default plugin dispatch.
+- M7 Emotes And Plugin Expansion: Twitch emotes, BTTV, FFZ, 7TV provider contracts/caches, plugin decorations and local commands.
+- M8 VOD Chat Replay: replay fetching, time sync, seek behavior, and emote-aware rendering.
+- M9 Personal Usability And Beta: persisted DataStore or Room history, recent VODs, diagnostics, device performance pass, personal beta APK.
