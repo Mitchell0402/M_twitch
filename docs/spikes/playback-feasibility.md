@@ -75,6 +75,20 @@ Observed token response:
 
 The token `value` and `signature` are treated as secrets and must stay out of logs, diagnostics, docs, and crash reports.
 
+## Client-ID And API Strategy
+
+Do not treat a different Twitch web Client-ID as a meaningful stability improvement. The M2 playback path depends on Twitch web GraphQL plus usher HLS behavior; changing to another web Client-ID would not change the core risk that the token query, required headers, or manifest behavior can change.
+
+For M3, use a split strategy instead:
+
+- Use an official Twitch Developer Console / Helix Client-ID for channel and VOD metadata: channel lookup, video listing, title, duration, thumbnail, creation time, and similar stable metadata.
+- Keep the Twitch web GraphQL Client-ID scoped only to playback access token resolution.
+- Keep GraphQL token resolution and usher manifest construction in a dedicated playback resolver/provider module.
+- Inject both Client-IDs through configuration or environment-specific build config. Do not hard-code either Client-ID in production Kotlin source.
+- Let feature and UI layers consume typed playback results such as `PlayableSource`, `PlaybackUnavailable`, `PlaybackForbidden`, or `PlaybackManifestMalformed`; do not leak GraphQL, token, usher, or signed URL details outside the playback layer.
+
+Helix makes the metadata path cleaner and more official, but it does not replace the playback-token and HLS manifest path because Twitch does not expose a stable public Helix endpoint for VOD HLS playback URLs.
+
 ## Manifest URL Shape
 
 Master manifest URL shape:
