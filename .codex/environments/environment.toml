@@ -3,4 +3,42 @@ version = 1
 name = "M_twitch"
 
 [setup]
-script = ""
+script = '''
+$ErrorActionPreference = "Stop"
+
+if ($env:CODEX_WORKTREE_PATH) {
+  Set-Location $env:CODEX_WORKTREE_PATH
+}
+
+$jdk = "C:\Program Files\Eclipse Adoptium\jdk-17.0.18.8-hotspot"
+$sdk = Join-Path $env:LOCALAPPDATA "Android\Sdk"
+
+if (-not (Test-Path "$jdk\bin\java.exe")) {
+  throw "JDK 17 not found: $jdk"
+}
+
+if (-not (Test-Path "$sdk\platforms\android-36")) {
+  throw "Android SDK platform 36 not found: $sdk"
+}
+
+$env:JAVA_HOME = $jdk
+$env:ANDROID_HOME = $sdk
+$env:ANDROID_SDK_ROOT = $env:ANDROID_HOME
+$env:Path = "$env:JAVA_HOME\bin;$env:ANDROID_HOME\platform-tools;$env:ANDROID_HOME\cmdline-tools\latest\bin;$env:Path"
+
+$sdkProperty = $env:ANDROID_HOME.Replace("\", "\\").Replace(":", "\:")
+Set-Content -Path "local.properties" -Value "sdk.dir=$sdkProperty" -Encoding ASCII
+
+.\gradlew.bat --version
+.\gradlew.bat :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
+
+'''
+
+[cleanup]
+script = '''
+if ($env:CODEX_WORKTREE_PATH) {
+  Set-Location $env:CODEX_WORKTREE_PATH
+}
+
+.\gradlew.bat --stop
+'''
