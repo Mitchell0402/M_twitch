@@ -46,8 +46,8 @@ $env:Path = "$env:JAVA_HOME\bin;$env:ANDROID_HOME\platform-tools;$env:ANDROID_HO
 $sdkProperty = $env:ANDROID_HOME.Replace("\", "\\").Replace(":", "\:")
 Set-Content -Path "local.properties" -Value "sdk.dir=$sdkProperty" -Encoding ASCII
 
-.\gradlew.bat --version
-.\gradlew.bat :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
+.\gradlew.bat --no-daemon --version
+.\gradlew.bat --no-daemon :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
 
 '''
 
@@ -60,5 +60,5 @@ if ($env:CODEX_WORKTREE_PATH) {
 }
 
 $env:GRADLE_USER_HOME = Join-Path (Get-Location) ".gradle"
-.\gradlew.bat --stop
+.\gradlew.bat --no-daemon --stop
 '''

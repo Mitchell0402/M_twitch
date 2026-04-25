@@ -161,6 +161,54 @@ The final app should not be a WebView wrapper of Stitch or Claude output. Use th
 design artifacts as source material, then implement the interface in Jetpack
 Compose with native player integration.
 
+### UI Polish Workflow
+
+Every feature milestone that changes a user-facing screen should be followed by
+a small UI polish checkpoint. The checkpoint is not a rewrite of the feature; it
+is the moment where rough functional UI is turned into a deliberate product
+surface while preserving the existing data, playback, chat, and plugin
+contracts.
+
+Each UI polish checkpoint follows the same sequence:
+
+1. Codex prepares tool prompts from the current repo state.
+   - Read the implemented screen files, current `DESIGN.md`, milestone spec,
+     screenshots if available, and known technical constraints.
+   - Create or update milestone-specific prompts under `docs/design/`.
+   - The Stitch prompt must ask for visual exploration and screen states.
+   - The Claude Design prompt must ask for a Compose-ready handoff, component
+     names, state tables, motion notes, and implementation constraints.
+2. Google Stitch explores the visual and interaction direction.
+   - Generate 2-3 directions only when the screen shape is still open.
+   - Generate one focused refinement when the feature already has a good
+     direction and only needs polish.
+   - Include loading, empty, error, offline/auth-needed, retrying, and
+     diagnostics states where the feature can surface them.
+3. Claude Design translates the selected Stitch direction.
+   - Produce design tokens, component inventory, state table, motion rules, and
+     phone-first layout behavior.
+   - Call out which parts map to existing Compose files and which new reusable
+     components should be introduced.
+   - Keep the handoff native Compose oriented; do not generate a WebView app.
+4. Codex implements the handoff in Android.
+   - Keep feature state and domain contracts unchanged unless the handoff
+     exposes a real missing state.
+   - Prefer reusable Compose components over one-off polish inside route files.
+   - Keep player, chat, and network layers isolated from visual changes.
+   - Run Gradle tests/build/lint, then run emulator or device smoke checks when
+     the changed surface is visual or interactive.
+5. Capture evidence before moving on.
+   - Save screenshots or notes for the polished states.
+   - Update `DESIGN.md` only when the polish introduces durable tokens,
+     components, or motion rules.
+   - Record remaining visual debt in the next milestone rather than hiding it
+     in implementation code.
+
+UI polish prompts should be treated as first-class artifacts. Do not send a
+feature directly to Stitch or Claude Design from memory alone; generate the
+prompt from the current repo state first so those tools receive the actual
+screen names, state models, constraints, and milestone goals.
+
 ## Technical Architecture
 
 Recommended stack:
@@ -400,6 +448,24 @@ Engineering verification:
   assuming HLS segments are continuous.
 - Add portrait and landscape/fullscreen layouts.
 
+### M3.5: VOD UI Foundation And Polish
+
+- Generate `docs/design/m3-vod-ui-stitch-prompt.md` from the implemented Home,
+  Channel VOD List, Player, `DESIGN.md`, and M2 playback spike constraints.
+- Use Stitch to refine Home channel entry, Channel VOD List cards, player
+  portrait controls, player landscape/fullscreen behavior, loading states,
+  playback unavailable states, and muted/discontinuous VOD messaging.
+- Use Claude Design to translate the selected direction into Compose-ready
+  components such as `VodCard`, `ScreenHeader`, `StateMessage`, `PlayerControls`,
+  `PlayerTimeline`, and `PlaybackDiagnosticsSheet`.
+- Implement the handoff in Compose without changing playback resolver or VOD
+  discovery contracts unless a missing UI state is exposed.
+- Verify with unit tests for formatting/state helpers, Gradle build/lint, and
+  emulator or device screenshots for Home, VOD list, playing, buffering,
+  manifest forbidden, empty, and retry states.
+- Update `DESIGN.md` with durable VOD and player tokens only after the selected
+  design direction is implemented.
+
 ### M4: OAuth And Account
 
 - Add mobile-safe OAuth only after the public VOD path is proven.
@@ -407,12 +473,39 @@ Engineering verification:
 - Gate followed channels, sending chat, moderator affordances, and protected
   API calls behind account state.
 
+### M4.5: Account UI Polish
+
+- Generate account and settings prompts from the implemented OAuth/account
+  screens, account-state model, error states, and privacy constraints.
+- Use Stitch to explore login, logged-in, expired-token, logout-confirmation,
+  auth-required, and account diagnostics surfaces.
+- Use Claude Design to produce Compose handoff for account cards, scope
+  explanations, token-expired recovery, destructive logout confirmation, and
+  settings grouping.
+- Implement polish behind existing account state contracts; do not introduce new
+  OAuth scopes only for visual convenience.
+- Verify login/logout state transitions with fake account state, screenshot
+  settings states, and keep public VOD playback usable without login.
+
 ### M5: Live Playback
 
 - Resolve live stream state and playable media item.
 - Add live player states for online, offline, reconnecting, and unavailable.
 - Share player lifecycle and controls with the VOD player where practical.
 - Keep chat surface available but transport can still be fake until M6.
+
+### M5.5: Live Player UI Polish
+
+- Generate live player prompts from the shared player components, live metadata
+  model, and VOD player polish decisions.
+- Use Stitch to refine online, offline, reconnecting, unavailable, and
+  low-latency live player states plus the collapsed chat placeholder.
+- Use Claude Design to define how live controls reuse or diverge from VOD
+  controls, including latency, reconnect, and stream-ended affordances.
+- Implement polish through shared player components where behavior overlaps and
+  feature-specific components where live semantics differ.
+- Verify player state screenshots, reconnect/offline messaging, and that VOD
+  playback polish is not regressed.
 
 ### M6: Live Chat And Default Plugin
 
@@ -422,12 +515,41 @@ Engineering verification:
 - Run normalized events through the default local chat plugin.
 - Add plugin diagnostics and user-visible enable/disable controls.
 
+### M6.5: Chat UI Polish
+
+- Generate chat prompts from normalized chat models, plugin contracts, account
+  requirements, and player layout constraints.
+- Use Stitch to explore chat density, badge/name/message layout, message burst
+  behavior, deleted messages, notices, reconnecting, rate-limited sending,
+  plugin failure, and collapsed chat over video.
+- Use Claude Design to translate the selected direction into Compose chat row,
+  chat list, input bar, connection banner, plugin notice, and diagnostics
+  components.
+- Implement chat polish without letting chat recomposition harm player
+  responsiveness.
+- Verify chat burst scrolling, player responsiveness while chat updates, plugin
+  failure isolation, and screenshots for disconnected, reconnecting,
+  rate-limited, and normal chat states.
+
 ### M7: Emotes And Plugin Expansion
 
 - Add Twitch emote rendering.
 - Add BTTV, FFZ, and 7TV provider contracts and caches.
 - Let chat plugins decorate messages and provide local commands.
 - Stress-test chat bursts and emote-heavy rooms.
+
+### M7.5: Emote And Plugin UI Polish
+
+- Generate prompts from implemented emote provider states, cache behavior,
+  plugin settings, and diagnostics.
+- Use Stitch to refine emote-heavy chat rows, emote fallback states, provider
+  unavailable states, plugin toggles, command suggestions, and diagnostics.
+- Use Claude Design to define reusable emote rendering, provider status,
+  plugin setting rows, command suggestion chips, and failure banners.
+- Implement polish behind provider and plugin contracts; plain text chat must
+  remain readable when emotes fail.
+- Verify emote-heavy rooms, provider failures, plugin toggles, and diagnostics
+  screenshots.
 
 ### M8: VOD Chat Replay
 
@@ -436,6 +558,19 @@ Engineering verification:
 - Handle seeking, resume, buffering, and unavailable replay states.
 - Reuse the live chat renderer and plugin pipeline where possible.
 
+### M8.5: Replay UI Polish
+
+- Generate prompts from replay provider states, player-position sync behavior,
+  and existing chat/player components.
+- Use Stitch to explore replay timeline, seek behavior, unavailable replay,
+  buffering, catch-up after seek, and replay panel collapse/expand behavior.
+- Use Claude Design to define replay-specific timeline markers, synchronized
+  chat states, seek affordances, and empty/unavailable messaging.
+- Implement polish by reusing live chat rendering where possible and adding
+  replay-only controls only where needed.
+- Verify seek, resume, replay sync, unavailable replay, and player/chat layout
+  screenshots.
+
 ### M9: Personal Usability And Beta
 
 - Persist watch progress.
@@ -443,6 +578,20 @@ Engineering verification:
 - Add settings and diagnostic surface.
 - Run device QA and performance pass.
 - Produce a personal beta APK.
+
+### M9.5: Final UI QA And Beta Polish
+
+- Generate final review prompts from the current app screenshots, `DESIGN.md`,
+  implemented components, and known visual debt from earlier polish checkpoints.
+- Use Stitch only for targeted fixes where the flow still feels unresolved; do
+  not restart broad visual exploration.
+- Use Claude Design to produce a final consistency pass for typography, spacing,
+  touch targets, color contrast, motion, navigation, and diagnostics hierarchy.
+- Implement final polish in the design system and shared components first, then
+  feature screens only where necessary.
+- Verify phone portrait and landscape screenshots, long-title wrapping, empty
+  and error states, player controls, chat density, settings, diagnostics,
+  startup, memory, and battery-sensitive playback behavior.
 
 ## Risks
 

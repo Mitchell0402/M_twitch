@@ -2295,9 +2295,16 @@ working playable manifest or chooses a replacement playback strategy.
 
 - M2 Playback Feasibility Spike: standalone channel to VOD ID to playback token to playable HLS manifest validation, including one muted VOD sample.
 - M3 VOD Discovery And Playback: VOD list states, playback token/source resolution, Media3 player, scrubber, muted segment metadata, fullscreen.
+- M3.5 VOD UI Foundation And Polish: generate current-state Stitch and Claude Design prompts, refine Home/VOD List/Player, then implement reusable Compose components and screenshot-verify key states.
 - M4 OAuth And Account: mobile OAuth, token refresh, account state, followed/private surfaces, chat-send prerequisites.
+- M4.5 Account UI Polish: generate prompts for account/settings surfaces, refine logged-out/logged-in/expired/logout states, then implement Compose polish without making public VOD playback require login.
 - M5 Live Playback: live channel playback, stream metadata, reconnect/offline states, low-latency player options.
+- M5.5 Live Player UI Polish: generate prompts for live player states, refine online/offline/reconnecting/unavailable UI, then implement shared player polish without regressing VOD playback.
 - M6 Live Chat And Default Plugin: selected Twitch chat transport, normalized events, send-message scopes/rate limits, default plugin dispatch.
+- M6.5 Chat UI Polish: generate prompts for chat density, connection states, rate limits, plugin failure, and collapsed chat over video, then implement and screenshot-verify chat states.
 - M7 Emotes And Plugin Expansion: Twitch emotes, BTTV, FFZ, 7TV provider contracts/caches, plugin decorations and local commands.
+- M7.5 Emote And Plugin UI Polish: generate prompts for emote-heavy rows, provider failures, plugin toggles, command suggestions, and diagnostics, then implement provider/plugin UI polish.
 - M8 VOD Chat Replay: replay fetching, time sync, seek behavior, and emote-aware rendering.
+- M8.5 Replay UI Polish: generate prompts for replay timeline, seek behavior, unavailable replay, and panel collapse/expand behavior, then implement replay-specific UI polish.
 - M9 Personal Usability And Beta: persisted DataStore or Room history, recent VODs, diagnostics, device performance pass, personal beta APK.
+- M9.5 Final UI QA And Beta Polish: generate final review prompts from screenshots and known visual debt, then do the final consistency pass for typography, spacing, touch targets, contrast, motion, navigation, and diagnostics.
