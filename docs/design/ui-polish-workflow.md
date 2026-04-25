@@ -142,6 +142,52 @@ Output:
 - A short visual QA checklist for emulator or device screenshots.
 ```
 
+## Feeding Stitch Output Into Claude Design
+
+After Stitch produces exploration or refinement output, do not send only the
+Claude Design prompt by itself. Build a small handoff packet so Claude Design
+has the selected visual source of truth and the implementation constraints in
+one place.
+
+The packet should include:
+
+- The full `*-claude-design-prompt.md`.
+- The selected Stitch direction name or label.
+- Stitch screenshots, exports, or links for every changed screen.
+- Stitch screenshots, exports, or notes for required state variants.
+- Any Stitch design tokens, component notes, spacing notes, or motion notes.
+- A short list of missing required states that Stitch did not cover.
+- A short instruction that Claude Design should translate the selected
+  direction into native Compose, not redesign from scratch.
+
+Use this wrapper when sending the packet to Claude Design:
+
+```text
+Selected Stitch direction: [Direction name].
+
+Use the attached Stitch screens and notes as the visual source of truth.
+Translate them into a native Jetpack Compose handoff for M Twitch. Do not
+redesign from scratch.
+
+Attached Stitch artifacts:
+- [Home / primary screen]
+- [List/detail/settings/player screen]
+- [Portrait player, if relevant]
+- [Landscape/fullscreen player, if relevant]
+- [Loading/empty/error/retry/auth/offline states]
+- [Diagnostics or timeline issue states, if relevant]
+
+Missing in Stitch output but still required:
+- [State or screen]
+- [State or screen]
+
+Now follow the Claude Design prompt below.
+```
+
+If a Stitch artifact is a link, also include a short plain-text summary of what
+the screen shows. If a state is missing, ask Claude Design to fill it using the
+same visual language instead of inventing a separate style.
+
 ## Codex Implementation Rules
 
 When implementing a Claude Design handoff:
