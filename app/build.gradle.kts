@@ -16,10 +16,17 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
+
+        buildConfigField(
+            "String",
+            "TWITCH_GQL_CLIENT_ID",
+            "\"${System.getenv("TWITCH_GQL_CLIENT_ID").orEmpty()}\"",
+        )
     }
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     compileOptions {

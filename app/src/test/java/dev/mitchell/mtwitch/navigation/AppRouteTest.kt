@@ -14,7 +14,8 @@ class AppRouteTest {
     @Test
     fun dynamicRoutesCarryTypedArguments() {
         assertEquals("cohhcarnage", AppRoute.Channel(channelLogin = "cohhcarnage").channelLogin)
-        assertEquals("123456789", AppRoute.Player(videoId = "123456789").videoId)
+        assertEquals("123456789", AppRoute.Player(videoId = "123456789", channelLogin = "lirik").videoId)
+        assertEquals("lirik", AppRoute.Player(videoId = "123456789", channelLogin = "lirik").channelLogin)
         assertEquals("cohhcarnage", AppRoute.Live(channelLogin = "cohhcarnage").channelLogin)
     }
 }

@@ -16,7 +16,10 @@ sealed interface AppRoute {
     data class Channel(val channelLogin: String) : AppRoute
 
     @Serializable
-    data class Player(val videoId: String) : AppRoute
+    data class Player(
+        val videoId: String,
+        val channelLogin: String,
+    ) : AppRoute
 
     @Serializable
     data class Live(val channelLogin: String) : AppRoute
