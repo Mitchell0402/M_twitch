@@ -21,9 +21,26 @@ if (-not (Test-Path "$sdk\platforms\android-36")) {
   throw "Android SDK platform 36 not found: $sdk"
 }
 
+if (-not (Test-Path "$sdk\build-tools\36.0.0")) {
+  throw "Android SDK build-tools 36.0.0 not found: $sdk"
+}
+
+if (-not (Test-Path "$sdk\cmdline-tools\latest\bin\sdkmanager.bat")) {
+  throw "Android SDK cmdline-tools not found: $sdk"
+}
+
+if (-not (Test-Path "$sdk\platform-tools\adb.exe")) {
+  throw "Android SDK platform-tools not found: $sdk"
+}
+
+if (-not (Test-Path "$sdk\licenses\android-sdk-license")) {
+  throw "Android SDK license not accepted: $sdk"
+}
+
 $env:JAVA_HOME = $jdk
 $env:ANDROID_HOME = $sdk
 $env:ANDROID_SDK_ROOT = $env:ANDROID_HOME
+$env:GRADLE_USER_HOME = Join-Path (Get-Location) ".gradle"
 $env:Path = "$env:JAVA_HOME\bin;$env:ANDROID_HOME\platform-tools;$env:ANDROID_HOME\cmdline-tools\latest\bin;$env:Path"
 
 $sdkProperty = $env:ANDROID_HOME.Replace("\", "\\").Replace(":", "\:")
@@ -36,9 +53,12 @@ Set-Content -Path "local.properties" -Value "sdk.dir=$sdkProperty" -Encoding ASC
 
 [cleanup]
 script = '''
+$ErrorActionPreference = "Stop"
+
 if ($env:CODEX_WORKTREE_PATH) {
   Set-Location $env:CODEX_WORKTREE_PATH
 }
 
+$env:GRADLE_USER_HOME = Join-Path (Get-Location) ".gradle"
 .\gradlew.bat --stop
 '''
