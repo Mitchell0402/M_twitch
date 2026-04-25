@@ -11,7 +11,7 @@ class VodModelsTest {
     fun watchProgressFractionClampsIntoValidRange() {
         val progress = WatchProgress(
             videoId = VideoId("123"),
-            positionMs = 75_000L,
+            positionMs = 75.minutes.inWholeMilliseconds,
             durationMs = 150.minutes.inWholeMilliseconds,
             updatedAtEpochMs = 1_000L,
         )
